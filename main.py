@@ -4,27 +4,94 @@ import math
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-def calculations(days):
-    # Perform calculations based on the input     
-    bottoms = math.ceil(days/3)
-    tops = math.ceil(days/1.3)
-    jumpers = math.ceil(days/3)
-    dresses = math.ceil(days/3)
-    bras = math.ceil(days/3)
-    socks = math.ceil(days +1)
-    pants = math.ceil(days *1.3)
-    pyjamas = math.ceil(days/3)
-    result = f"\nBottoms: {bottoms}\nTops: {tops}\nJumpers: {jumpers}\nDresses: {dresses}\nBras: {bras}\nSocks: {socks}\nPants: {pants}\nPyjamas: {pyjamas}"
 
-    return result 
+def calculations(days, minTemp, maxTemp, sports, swim, events):
+    # Perform calculations based on the input
+    bottoms = math.ceil(days / 3)
+    tops = math.ceil(days / 1.3)
+    jumpers = math.ceil(days / 3)
+    dresses = math.ceil(days / 3)
+    bras = math.ceil(days / 3)
+    socks = math.ceil(days + 1)
+    pants = math.ceil(days * 1.3)
+    pyjamas = math.ceil(days / 3)
+    others = ""
 
-def create_checklist(days, filename):
-    # Call the calculations function to get the variable values
-    variables = calculations(days)
+    if minTemp > 20:
+        jumpers -= 1
+    else:
+        jumpers += 1
+    if swim == "Yes":
+        others = others + "\nSwimsuit"
+    if sports == "Yes":
+        others = others + "\nSports outfit"
+    if events == "Yes":
+        others = others + "\nEvents outfit"
+    if maxTemp > 23:
+        others = others + "\nSuncream"
+    result = f"\nBottoms: {bottoms}\nTops: {tops}\nJumpers: {jumpers}\nDresses: {dresses}\nBras: {bras}\nSocks: {socks}\nPants: {pants}\nPyjamas: {pyjamas}\nOthers: {others}"
 
-    # Split the variables string into a list of lines
-    lines = variables.split('\n')
+    return result
 
+
+def decideShoes(maxTemp, sports, events):
+    shoes = "Vejas"
+    if maxTemp > 25:
+        shoes = shoes + "\nSandals"
+
+    if sports == "Yes":
+        shoes = shoes + "\nTrainers"
+
+    if events == "Yes":
+        shoes = shoes + "\nHeels"
+    result = f"\n{shoes}"
+    return result
+
+
+def decideSkincareMakeup(days, events):
+    if days > 3:
+        skincare = f"\nMoisturizer \nToner \nExfoliant \nSPF \nRetinol \nFacewash \nMask"
+    else:
+        skincare = f"\nMoisturizer \nToner \nSPF \nFacewash"
+    if events == "Yes":
+        makeup = f"\nFull face"
+    else:
+        makeup = f"\nMinimal"
+
+    results = skincare + makeup
+    return results
+
+
+def generate_packing_list():
+    days = int(int_entry.get())
+    minTemp = int(range_start_entry.get())
+    maxTemp = int(range_end_entry.get())
+    sports = dropdown1.get()
+    swim = dropdown2.get()
+    events = dropdown3.get()
+    results = calculations(days, minTemp, maxTemp, sports, swim, events)
+    shoes = decideShoes(maxTemp, sports, events)
+    skincare_makeup = decideSkincareMakeup(days, events)
+    create_checklist(results, shoes, skincare_makeup, "checklist.pdf")
+
+    # Create a new window for displaying the result
+    result_window = tk.Toplevel(root)
+    result_window.title("Packing List")
+
+    # Display the result
+    result_label = ttk.Label(result_window, text="Packing List: {}".format(results))
+    result_label.pack()
+
+    # Generate PDF Button
+    pdf_button = ttk.Button(result_window, text="Generate PDF", command=lambda: create_checklist(results, shoes, skincare_makeup, "checklist.pdf"))
+    pdf_button.pack()
+
+    # Close button for the result window
+    close_button = ttk.Button(result_window, text="Close", command=result_window.destroy)
+    close_button.pack()
+
+
+def create_checklist(clothes, shoes, skincare_makeup, filename):
     # Create a PDF file
     c = canvas.Canvas(filename, pagesize=letter)
 
@@ -32,37 +99,36 @@ def create_checklist(days, filename):
     font_size = 12
     line_height = font_size + 4
 
+    # Define titles and their formatting
+    titles = {
+        "Clothes": ("Helvetica-Bold", 14),
+        "Shoes": ("Helvetica-Bold", 14),
+        "Skincare and Makeup": ("Helvetica-Bold", 14)
+    }
+
     # Create a formatted checklist PDF
     y = 750  # Initial y-coordinate
-    for line in lines:
+    for title, content in zip(titles.keys(), [clothes, shoes, skincare_makeup]):
+        # Draw title
+        title_font, title_size = titles[title]
+        c.setFont(title_font, title_size)
+        c.drawString(50, y, f"{title}:")
+        y -= line_height
+
+        # Draw content
+        content_lines = content.split('\n')
         c.setFont("Helvetica", font_size)
-        c.drawString(50, y, f"- {line} [ ]")
+        for line in content_lines:
+            if line.strip():  # Exclude empty lines
+                c.drawString(70, y, f"- {line.strip()}")
+                y -= line_height
+
+        # Add extra space after each section
         y -= line_height
 
     # Save the PDF file
     c.save()
 
-
-def submit():
-    days = int(int_entry.get())
-    range_start = int(range_start_entry.get())
-    range_end = int(range_end_entry.get())
-    dropdown1_value = dropdown1.get()
-    dropdown2_value = dropdown2.get()
-    dropdown3_value = dropdown3.get()
-    results = calculations(days)
-    create_checklist(days, "checklist.pdf")
-    # Create a new window for displaying the result
-    result_window = tk.Toplevel(root)
-    result_window.title("Packing List")
-    
-    # Display the result
-    result_label = ttk.Label(result_window, text="Packing List: {}".format(results))
-    result_label.pack()
-    
-    # Close button for the result window
-    close_button = ttk.Button(result_window, text="Close", command=result_window.destroy)
-    close_button.pack()
 
 root = tk.Tk()
 root.title("Holiday Information")
@@ -88,7 +154,7 @@ range_end_entry.pack(side=tk.LEFT)
 # Dropdown Boxes
 dropdown1_label = ttk.Label(root, text="Sporting/hiking activities?")
 dropdown1_label.pack()
-dropdown1 = ttk.Combobox(root, values=["Yes (one)", "Yes (many)", "No"])
+dropdown1 = ttk.Combobox(root, values=["Yes", "No"])
 dropdown1.pack()
 
 dropdown2_label = ttk.Label(root, text="Swimming?")
@@ -98,11 +164,12 @@ dropdown2.pack()
 
 dropdown3_label = ttk.Label(root, text="Fancy events?")
 dropdown3_label.pack()
-dropdown3 = ttk.Combobox(root, values=["Yes (one)", "Yes (many)", "No"])
+dropdown3 = ttk.Combobox(root, values=["Yes", "No"])
 dropdown3.pack()
 
-# Submit Button
-submit_button = ttk.Button(root, text="Submit", command=submit)
-submit_button.pack()
+# Generate Packing List Button
+generate_button = ttk.Button(root, text="Generate Packing List", command=generate_packing_list)
+generate_button.pack()
 
 root.mainloop()
+
