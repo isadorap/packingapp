@@ -47,6 +47,9 @@ def decideShoes(maxTemp, sports, events):
     result = f"\n{shoes}"
     return result
 
+def alwaysItems(days):
+    meds = days+2
+    return f"\nMeds ({meds}) \nToothpaste \nToothbrush \nDeodorant \nPerfume \nBooks \nHobbies \nGlasses \nChargers \nConverters \nSleep stuff"
 
 def decideSkincareMakeup(days, events):
     if days > 3:
@@ -72,7 +75,8 @@ def generate_packing_list():
     results = calculations(days, minTemp, maxTemp, sports, swim, events)
     shoes = decideShoes(maxTemp, sports, events)
     skincare_makeup = decideSkincareMakeup(days, events)
-    create_checklist(results, shoes, skincare_makeup, "checklist.pdf")
+    always = alwaysItems(days)
+    create_checklist(results, shoes, skincare_makeup, always, "checklist.pdf")
 
     # Create a new window for displaying the result
     result_window = tk.Toplevel(root)
@@ -83,7 +87,7 @@ def generate_packing_list():
     result_label.pack()
 
     # Generate PDF Button
-    pdf_button = ttk.Button(result_window, text="Generate PDF", command=lambda: create_checklist(results, shoes, skincare_makeup, "checklist.pdf"))
+    pdf_button = ttk.Button(result_window, text="Generate PDF", command=lambda: create_checklist(results, shoes, skincare_makeup, always, "checklist.pdf"))
     pdf_button.pack()
 
     # Close button for the result window
@@ -91,7 +95,7 @@ def generate_packing_list():
     close_button.pack()
 
 
-def create_checklist(clothes, shoes, skincare_makeup, filename):
+def create_checklist(clothes, shoes, skincare_makeup, always, filename):
     # Create a PDF file
     c = canvas.Canvas(filename, pagesize=letter)
 
@@ -103,12 +107,13 @@ def create_checklist(clothes, shoes, skincare_makeup, filename):
     titles = {
         "Clothes": ("Helvetica-Bold", 14),
         "Shoes": ("Helvetica-Bold", 14),
-        "Skincare and Makeup": ("Helvetica-Bold", 14)
+        "Skincare and Makeup": ("Helvetica-Bold", 14),
+        "Other": ("Helvetica-Bold", 14)
     }
 
     # Create a formatted checklist PDF
     y = 750  # Initial y-coordinate
-    for title, content in zip(titles.keys(), [clothes, shoes, skincare_makeup]):
+    for title, content in zip(titles.keys(), [clothes, shoes, skincare_makeup, always]):
         # Draw title
         title_font, title_size = titles[title]
         c.setFont(title_font, title_size)
@@ -172,4 +177,3 @@ generate_button = ttk.Button(root, text="Generate Packing List", command=generat
 generate_button.pack()
 
 root.mainloop()
-
