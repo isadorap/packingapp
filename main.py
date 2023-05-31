@@ -125,7 +125,7 @@ def create_checklist(clothes, shoes, skincare_makeup, always, filename):
         c.setFont("Helvetica", font_size)
         for line in content_lines:
             if line.strip():  # Exclude empty lines
-                c.drawString(70, y, f"- {line.strip()}")
+                c.drawString(70, y, f"\u25A1 {line.strip()}")
                 y -= line_height
 
         # Add extra space after each section
